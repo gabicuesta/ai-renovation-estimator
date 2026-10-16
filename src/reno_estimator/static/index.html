@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Presupuestador de reformas IA</title>
+<style>
+  :root {
+    --bg: #f7f6f3; --surface: #ffffff; --text: #1d1d1b; --muted: #6b6a66; --line: #e4e2dc;
+    --accent: #c2541b; --accent-soft: #fbeee6; --warn: #9a6400; --warn-soft: #fff4dc; --ok: #2f7a4f;
+    --radius: 12px; --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161614; --surface: #1f1f1c; --text: #ecebe6; --muted: #a09e97; --line: #33322e;
+      --accent: #f08a4b; --accent-soft: #3a2518; --warn: #f2c063; --warn-soft: #3a2f16; --ok: #6fcf97;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1080px; margin: 0 auto; padding: 32px 16px 64px; }
+  header h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -.01em; }
+  header p { margin: 0 0 24px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: 380px 1fr; gap: 24px; align-items: start; }
+  .grid > * { min-width: 0; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+          box-shadow: var(--shadow); padding: 20px; }
+  label { display: block; font-weight: 600; font-size: 13px; margin: 14px 0 6px; }
+  label:first-child { margin-top: 0; }
+  .hint { font-weight: 400; color: var(--muted); }
+  input, select, textarea { width: 100%; font: inherit; color: var(--text); background: var(--bg);
+          border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; }
+  textarea { min-height: 120px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row label { margin-top: 14px; }
+  .drop { border: 1.5px dashed var(--line); border-radius: 10px; padding: 14px; text-align: center;
+          color: var(--muted); cursor: pointer; }
+  .drop:hover { border-color: var(--accent); }
+  .thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .thumbs img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+  button { margin-top: 18px; width: 100%; padding: 12px; font: inherit; font-weight: 600; border: 0;
+           border-radius: 10px; background: var(--accent); color: #fff; cursor: pointer; }
+  button:disabled { opacity: .6; cursor: progress; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-top: 14px; }
+  .empty { color: var(--muted); text-align: center; padding: 48px 16px; }
+  .total { font-size: 32px; font-weight: 700; letter-spacing: -.02em; margin: 2px 0; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .kpis { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: end; margin-bottom: 8px; }
+  .meter { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+  .meter > span { display: block; height: 100%; background: var(--accent); }
+  .checks { margin: 16px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+  .checks li { padding: 8px 12px; border-radius: 8px; font-size: 13px; background: var(--accent-soft); }
+  .checks li.warning { background: var(--warn-soft); color: var(--warn); }
+  h2 { font-size: 15px; margin: 24px 0 8px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+  td.num, th.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .chapter td { background: var(--bg); font-weight: 600; }
+  .basis { color: var(--muted); font-size: 12.5px; }
+  .conf { display: inline-block; min-width: 34px; text-align: center; border-radius: 99px; font-size: 12px;
+          padding: 1px 6px; background: var(--accent-soft); }
+  ul.plain { margin: 0; padding-left: 18px; }
+  .lists { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 860px) { .lists { grid-template-columns: 1fr; } }
+  footer.meta { margin-top: 20px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line);
+                padding-top: 12px; }
+  .error { background: var(--warn-soft); color: var(--warn); padding: 12px; border-radius: 8px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--line); border-top-color: var(--accent);
+             border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (max-width: 520px) {
+    .kpis { grid-template-columns: 1fr; } .total { font-size: 26px; }
+    .unit-price { display: none; }
+    td.num, th.num { white-space: normal; }
+    th, td { padding: 8px 4px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Presupuestador de reformas con IA</h1>
+    <p>Sube fotos y describe la reforma. Obtén un presupuesto orientativo por partidas, con rangos y nivel de confianza.</p>
+  </header>
+
+  <div class="grid">
+    <form id="form" class="card">
+      <label for="description">¿Qué quieres reformar?</label>
+      <textarea id="description" name="description" required minlength="10"
+        placeholder="Ej.: Reformar el baño completo: quitar la bañera y poner plato de ducha, cambiar azulejos, lavabo e inodoro."></textarea>
+
+      <label>Fotos <span class="hint">(hasta 6)</span></label>
+      <div class="drop" id="drop">Haz clic o arrastra las fotos aquí</div>
+      <input type="file" id="photos" name="photos" accept="image/*" multiple hidden>
+      <div class="thumbs" id="thumbs"></div>
+
+      <div class="row">
+        <div>
+          <label for="province">Provincia</label>
+          <select id="province" name="province"><option value="">—</option></select>
+        </div>
+        <div>
+          <label for="area_m2">Superficie <span class="hint">(m²)</span></label>
+          <input id="area_m2" name="area_m2" type="number" min="1" max="2000" step="0.5">
+        </div>
+      </div>
+
+      <label for="quality">Calidad de acabados</label>
+      <select id="quality" name="quality">
+        <option value="basica">Básica</option>
+        <option value="media" selected>Media</option>
+        <option value="alta">Alta</option>
+      </select>
+
+      <details>
+        <summary>Opciones avanzadas</summary>
+        <label for="cadastral_reference">Referencia catastral <span class="hint">(opcional)</span></label>
+        <input id="cadastral_reference" name="cadastral_reference" placeholder="9872023VH5797S0001WX">
+        <label for="model">Modelo <span class="hint">(proveedor:modelo)</span></label>
+        <input id="model" name="model" list="models">
+        <datalist id="models"></datalist>
+      </details>
+
+      <button id="submit" type="submit">Calcular presupuesto</button>
+    </form>
+
+    <section id="result" class="card">
+      <div class="empty">El presupuesto aparecerá aquí.</div>
+    </section>
+  </div>
+</main>
+
+<script>
+const PROVINCES = ["A Coruña","Álava","Albacete","Alicante","Almería","Asturias","Ávila","Badajoz","Barcelona","Burgos","Cáceres","Cádiz","Cantabria","Castellón","Ceuta","Ciudad Real","Córdoba","Cuenca","Girona","Granada","Guadalajara","Gipuzkoa","Huelva","Huesca","Illes Balears","Jaén","La Rioja","Las Palmas","León","Lleida","Lugo","Madrid","Málaga","Melilla","Murcia","Navarra","Ourense","Palencia","Pontevedra","Salamanca","Santa Cruz de Tenerife","Segovia","Sevilla","Soria","Tarragona","Teruel","Toledo","Valencia","Valladolid","Bizkaia","Zamora","Zaragoza"];
+const CHAPTERS = {demolicion: "Demolición", albanileria: "Albañilería", fontaneria: "Fontanería", electricidad: "Electricidad",
+  climatizacion: "Climatización", carpinteria_interior: "Carpintería interior", carpinteria_exterior: "Carpintería exterior",
+  revestimientos: "Revestimientos", pavimentos: "Pavimentos", pintura: "Pintura", sanitarios: "Sanitarios",
+  mobiliario_cocina: "Mobiliario de cocina", impermeabilizacion: "Impermeabilización", gestion_residuos: "Gestión de residuos", otros: "Otros"};
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const eur = (n) => new Intl.NumberFormat("es-ES", {style: "currency", currency: "EUR", maximumFractionDigits: 0}).format(n);
+const eur2 = (n) => new Intl.NumberFormat("es-ES", {style: "currency", currency: "EUR", maximumFractionDigits: 2}).format(n);
+
+PROVINCES.forEach(p => $("#province").insertAdjacentHTML("beforeend", `<option>${esc(p)}</option>`));
+
+fetch("/api/models").then(r => r.json()).then(m => {
+  $("#model").placeholder = m.default;
+  Object.entries(m.providers).forEach(([p, model]) =>
+    $("#models").insertAdjacentHTML("beforeend", `<option value="${esc(p)}:${esc(model)}">`));
+}).catch(() => {});
+
+let files = [];
+const photosInput = $("#photos");
+$("#drop").addEventListener("click", () => photosInput.click());
+$("#drop").addEventListener("dragover", e => { e.preventDefault(); });
+$("#drop").addEventListener("drop", e => { e.preventDefault(); addFiles(e.dataTransfer.files); });
+photosInput.addEventListener("change", () => addFiles(photosInput.files));
+
+function addFiles(list) {
+  files = [...files, ...[...list].filter(f => f.type.startsWith("image/"))].slice(0, 6);
+  $("#thumbs").innerHTML = "";
+  files.forEach(f => {
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(f);
+    img.alt = f.name;
+    $("#thumbs").appendChild(img);
+  });
+}
+
+$("#form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const data = new FormData();
+  for (const [k, v] of new FormData(e.target).entries()) if (k !== "photos" && v !== "") data.append(k, v);
+  files.forEach(f => data.append("photos", f));
+
+  $("#submit").disabled = true;
+  $("#result").innerHTML = `<div class="empty"><div class="spinner"></div>Analizando fotos y descripción…</div>`;
+  try {
+    const res = await fetch("/api/estimate", {method: "POST", body: data});
+    const body = await res.json();
+    if (!res.ok) throw new Error(typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail));
+    render(body);
+  } catch (err) {
+    $("#result").innerHTML = `<div class="error">No se pudo calcular el presupuesto: ${esc(err.message)}</div>`;
+  } finally {
+    $("#submit").disabled = false;
+  }
+});
+
+function render(est) {
+  const byChapter = {};
+  est.line_items.forEach(l => (byChapter[l.chapter] ??= []).push(l));
+  const rows = Object.entries(byChapter).map(([ch, lines]) => `
+    <tr class="chapter"><td colspan="5">${esc(CHAPTERS[ch] ?? ch)}</td></tr>
+    ${lines.map(l => `
+      <tr>
+        <td class="desc">${esc(l.description)}<div class="basis">${esc(l.basis)}</div></td>
+        <td class="num">${l.quantity.toLocaleString("es-ES")} ${esc(l.unit)}</td>
+        <td class="num unit-price">${eur2(l.unit_price_low)} – ${eur2(l.unit_price_high)}</td>
+        <td class="num">${eur(l.total_low)} – ${eur(l.total_high)}</td>
+        <td class="num"><span class="conf">${Math.round(l.confidence * 100)}%</span></td>
+      </tr>`).join("")}`).join("");
+
+  const list = (items) => items.length ? `<ul class="plain">${items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>` : `<span class="sub">—</span>`;
+  const u = est.usage;
+  const conf = Math.round(est.overall_confidence * 100);
+
+  $("#result").innerHTML = `
+    <div class="kpis">
+      <div>
+        <div class="sub">Total estimado (IVA ${Math.round(est.vat_rate * 100)}% incluido)</div>
+        <div class="total">${eur(est.total_low)} – ${eur(est.total_high)}</div>
+        <div class="sub">Sin IVA: ${eur(est.subtotal_low)} – ${eur(est.subtotal_high)}</div>
+      </div>
+      <div>
+        <div class="sub">Confianza global: <strong>${conf}%</strong></div>
+        <div class="meter" role="meter" aria-valuenow="${conf}" aria-valuemin="0" aria-valuemax="100"><span style="width:${conf}%"></span></div>
+      </div>
+    </div>
+    <p>${esc(est.summary)}</p>
+    ${est.checks.length ? `<ul class="checks">${est.checks.map(c => `<li class="${esc(c.level)}">${esc(c.message)}</li>`).join("")}</ul>` : ""}
+    <h2>Partidas</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Partida</th><th class="num">Cantidad</th><th class="num unit-price">Precio unitario</th><th class="num">Importe (sin IVA)</th><th class="num">Conf.</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <div class="lists">
+      <div><h2>Preguntas para el cliente</h2>${list(est.questions_for_client)}</div>
+      <div><h2>Supuestos</h2>${list(est.assumptions)}</div>
+      <div><h2>Riesgos</h2>${list(est.risks)}</div>
+    </div>
+    <footer class="meta">
+      ${esc(est.disclaimer)}<br>
+      ${u ? `${esc(u.provider)}:${esc(u.model)} · ${u.latency_s}s · ${u.input_tokens + u.output_tokens} tokens${u.cost_usd != null ? ` · $${u.cost_usd.toFixed(4)}` : ""}${u.attempts > 1 ? ` · ${u.attempts} intentos` : ""}` : ""}
+    </footer>`;
+}
+</script>
+</body>
+</html>

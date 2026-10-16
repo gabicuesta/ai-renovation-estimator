@@ -1,0 +1,89 @@
+# Evaluation cases.
+#
+# reference_range: orientative cost of the job in EUR, EXCLUDING VAT, mid-2020s Spanish
+# market, compiled for this eval from public price guides and professional rules of thumb.
+# It is a sanity band, not ground truth: replace it with real closed quotes if you have them.
+#
+# expected_chapters: chapters a professional would include. "a|b" means either is fine.
+# photos (optional): paths relative to this file. Add your own to test vision.
+
+cases:
+  - id: bano-completo-madrid
+    description: >
+      Reformar el baño completo: quitar la bañera y poner un plato de ducha de obra con mampara,
+      cambiar todos los azulejos y el suelo, lavabo con mueble, inodoro nuevo y grifería.
+    province: Madrid
+    area_m2: 5
+    quality: media
+    expected_chapters: [demolicion, fontaneria, revestimientos, sanitarios, gestion_residuos]
+    reference_range: [6000, 11000]
+
+  - id: cocina-barcelona
+    description: >
+      Reforma de cocina de 10 m2: muebles nuevos altos y bajos con encimera de cuarzo,
+      cambiar alicatado y suelo, mover el fregadero un metro y añadir enchufes.
+    province: Barcelona
+    area_m2: 10
+    quality: media
+    expected_chapters: [demolicion, mobiliario_cocina, fontaneria, electricidad, revestimientos|pavimentos]
+    reference_range: [10000, 20000]
+
+  - id: pintar-piso-valencia
+    description: >
+      Pintar un piso de 80 m2 entero, paredes y techos, en blanco. Hay algunas grietas pequeñas
+      en el salón. Los muebles se quedan dentro.
+    province: Valencia
+    area_m2: 80
+    quality: basica
+    expected_chapters: [pintura]
+    reference_range: [1800, 4000]
+
+  - id: ventanas-zaragoza
+    description: >
+      Cambiar 6 ventanas antiguas de aluminio sin rotura de puente térmico por ventanas de
+      aluminio con RPT y doble acristalamiento. Medidas aproximadas 120x120 cm.
+    province: Zaragoza
+    quality: media
+    expected_chapters: [carpinteria_exterior]
+    reference_range: [3500, 7000]
+
+  - id: integral-sevilla
+    description: >
+      Reforma integral de un piso de 70 m2 de los años 70: tirar un tabique para unir cocina
+      y salón, instalación eléctrica y fontanería nuevas, suelo nuevo en toda la casa, puertas
+      interiores nuevas, pintura. Cocina y baño los hacemos aparte más adelante.
+    province: Sevilla
+    area_m2: 70
+    quality: media
+    expected_chapters: [demolicion, albanileria, electricidad, fontaneria, pavimentos, carpinteria_interior, pintura, gestion_residuos]
+    reference_range: [25000, 50000]
+
+  - id: laminado-madrid
+    description: >
+      Poner suelo laminado AC4 encima del gres actual en salón y dos dormitorios, unos 50 m2,
+      con rodapié nuevo.
+    province: Madrid
+    area_m2: 50
+    quality: media
+    expected_chapters: [pavimentos]
+    reference_range: [1500, 3500]
+
+  - id: caldera-bilbao
+    description: >
+      Sustituir una caldera de gas de 20 años por una caldera de condensación, en la misma
+      ubicación, en un piso de 90 m2 con radiadores.
+    province: Bizkaia
+    area_m2: 90
+    quality: media
+    expected_chapters: [climatizacion|fontaneria]
+    reference_range: [1800, 4000]
+
+  - id: electricidad-malaga
+    description: >
+      Rehacer la instalación eléctrica completa de un piso de 90 m2 con cuadro nuevo, nuevo
+      cableado y mecanismos, y boletín. El piso está vacío.
+    province: Málaga
+    area_m2: 90
+    quality: media
+    expected_chapters: [electricidad]
+    reference_range: [4500, 9000]
